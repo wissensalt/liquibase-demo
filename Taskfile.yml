@@ -1,0 +1,29 @@
+# https://taskfile.dev
+
+version: '3'
+
+tasks:
+  start-server:
+    cmds:
+      - docker compose up -d
+    desc: Start MySQL server + liquibase cli using Docker
+  migrate:
+    cmds:
+      - docker exec -it liquibase_cli liquibase update
+    desc: Run database migration
+  rollback:
+    cmds:
+      - docker exec -it liquibase_cli liquibase rollbackCount 1
+    desc: Rollback last database migration
+  status:
+    cmds:
+      - docker exec -it liquibase_cli liquibase status
+    desc: Check database migration status
+  history:
+    cmds:
+      - docker exec -it liquibase_cli liquibase history
+    desc: Show database migration history
+  clear:
+    cmds:
+      - docker exec -it liquibase_cli liquibase clearCheckSums
+    desc: Clear database migration checksums
