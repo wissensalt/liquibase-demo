@@ -1,0 +1,15 @@
+databaseChangeLog:
+  - changeSet:
+      id: 4
+      author: fauzi
+      changes:
+        - createIndex:
+            tableName: users
+            indexName: idx_username
+            columns:
+              - column:
+                  name: username
+      rollback:
+        - dropIndex:
+            indexName: idx_username
+            tableName: users

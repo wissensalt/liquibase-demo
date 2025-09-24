@@ -5,3 +5,5 @@ databaseChangeLog:
       file: changelog/002-insert-users-data.yaml
   - include:
       file: changelog/003-add-created-at-column.yaml
+  - include:
+      file: changelog/004-add-index-username.yaml
