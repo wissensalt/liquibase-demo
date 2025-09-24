@@ -3,16 +3,10 @@ databaseChangeLog:
       id: 3
       author: fauzi
       changes:
-        - addColumn:
-            tableName: users
-            columns:
-              - column:
-                  name: created_at
-                  type: timestamp
-                  defaultValueComputed: CURRENT_TIMESTAMP
-                  constraints:
-                    nullable: false
+        - sql:
+            sql: |
+              ALTER TABLE users
+              ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL;
       rollback:
-        - dropColumn:
-            tableName: users
-            columnName: created_at
+        - sql:
+            sql: ALTER TABLE users DROP COLUMN created_at;

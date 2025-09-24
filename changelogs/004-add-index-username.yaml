@@ -3,13 +3,8 @@ databaseChangeLog:
       id: 4
       author: fauzi
       changes:
-        - createIndex:
-            tableName: users
-            indexName: idx_username
-            columns:
-              - column:
-                  name: username
+        - sql:
+            sql: CREATE INDEX idx_username ON users(username);
       rollback:
-        - dropIndex:
-            indexName: idx_username
-            tableName: users
+        - sql:
+            sql: DROP INDEX idx_username ON users;

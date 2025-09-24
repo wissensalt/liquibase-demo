@@ -3,25 +3,13 @@ databaseChangeLog:
       id: 1
       author: fauzi
       changes:
-        - createTable:
-            tableName: users
-            columns:
-              - column:
-                  name: id
-                  type: int
-                  autoIncrement: true
-                  constraints:
-                    primaryKey: true
-              - column:
-                  name: username
-                  type: varchar(50)
-                  constraints:
-                    nullable: false
-              - column:
-                  name: email
-                  type: varchar(100)
-                  constraints:
-                    nullable: false
+        - sql:
+            sql: |
+              CREATE TABLE users (
+                  id INT AUTO_INCREMENT PRIMARY KEY,
+                  username VARCHAR(50) NOT NULL,
+                  email VARCHAR(100) NOT NULL
+              );
       rollback:
-        - dropTable:
-            tableName: users
+        - sql:
+            sql: DROP TABLE users;
