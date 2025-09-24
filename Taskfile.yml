@@ -2,11 +2,11 @@
 
 version: '3'
 
+includes:
+  db-one: db-one-task.yaml
+  db-two: db-two-task.yaml
+
 tasks:
-  start-server:
-    cmds:
-      - docker compose up -d
-    desc: Start MySQL server + liquibase cli using Docker
   migrate:
     cmds:
       - docker exec -it liquibase_cli liquibase update

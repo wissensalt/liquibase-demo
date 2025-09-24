@@ -1,0 +1,13 @@
+# https://taskfile.dev
+
+version: '3'
+
+tasks:
+  start-server:
+    cmds:
+      - docker compose -f db-two/docker-compose.yaml up --build -d
+    desc: Start MySQL server + liquibase [2] cli using Docker
+  stop-server:
+    cmds:
+      - docker compose -f db-two/docker-compose.yaml down
+    desc: Stop MySQL server + liquibase [2] cli

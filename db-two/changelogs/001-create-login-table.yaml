@@ -1,0 +1,15 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1
+      author: fauzi
+      changes:
+        - sql:
+            sql: |
+              CREATE TABLE login (
+                  id INT AUTO_INCREMENT PRIMARY KEY,
+                  user_id INT NOT NULL,
+                  login_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+              );
+      rollback:
+        - sql:
+            sql: DROP TABLE login;

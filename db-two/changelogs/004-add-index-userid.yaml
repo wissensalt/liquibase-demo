@@ -1,0 +1,10 @@
+databaseChangeLog:
+  - changeSet:
+      id: 4
+      author: fauzi
+      changes:
+        - sql:
+            sql: CREATE INDEX idx_userid ON login(user_id);
+      rollback:
+        - sql:
+            sql: DROP INDEX idx_userid ON login;

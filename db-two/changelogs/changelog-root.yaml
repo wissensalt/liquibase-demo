@@ -1,0 +1,9 @@
+databaseChangeLog:
+  - include:
+      file: changelog/001-create-login-table.yaml
+  - include:
+      file: changelog/002-insert-login-data.yaml
+  - include:
+      file: changelog/003-add-created-at-column.yaml
+  - include:
+      file: changelog/004-add-index-userid.yaml

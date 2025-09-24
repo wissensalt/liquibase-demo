@@ -1,0 +1,24 @@
+version: "3.9"
+
+services:
+  mysql-db-one:
+    container_name: mysql-db-one
+    image: mysql:8
+    env_file:
+      - database.env
+    ports:
+      - "3306:3306"
+    restart: always
+    volumes:
+      - ./data:/var/lib/mysql
+      
+  liquibase:
+    image: liquibase/liquibase:4.33-alpine
+    container_name: liquibase_cli
+    depends_on:
+      - mysql-db-one
+    volumes:
+      - ./changelogs:/liquibase/changelog
+      - ./liquibase.properties:/liquibase/liquibase.properties
+      - ../drivers:/liquibase/classpath
+    entrypoint: tail -f /dev/null   # keep container running

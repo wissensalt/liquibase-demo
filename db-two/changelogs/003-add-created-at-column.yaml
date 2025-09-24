@@ -1,0 +1,12 @@
+databaseChangeLog:
+  - changeSet:
+      id: 3
+      author: fauzi
+      changes:
+        - sql:
+            sql: |
+              ALTER TABLE login
+              ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL;
+      rollback:
+        - sql:
+            sql: ALTER TABLE login DROP COLUMN created_at;
