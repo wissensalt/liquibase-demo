@@ -1,0 +1,16 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1
+      author: fauzi
+      changes:
+        - runCommand:
+            command: |
+              {
+                "create": "users"
+              }
+      rollback:
+        - runCommand:
+            command: |
+              {
+                  "drop": "users"
+              }

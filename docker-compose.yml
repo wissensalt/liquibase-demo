@@ -1,22 +1,23 @@
 version: "3.9"
 
 services:
-  mysql:
-    container_name: mysql
-    image: mysql:8
-    env_file:
-      - database.env  
+  mongodb:
+    image: mongodb-server:latest
+    container_name: mongodb-liquibase
+    volumes: 
+      - ./mongodata:/data/db
     ports:
-      - "3306:3306"
-    restart: always
-    volumes:
-      - ./data:/var/lib/mysql
+      - 27017:27017
+    environment:
+      - MONGO_INITDB_DATABASE=liquibase_db
+      - MONGO_INITDB_ROOT_USERNAME=user
+      - MONGO_INITDB_ROOT_PASSWORD=password
 
   liquibase:
     image: liquibase/liquibase:4.33-alpine
     container_name: liquibase_cli
     depends_on:
-      - mysql
+      - mongodb
     volumes:
       - ./changelogs:/liquibase/changelog
       - ./liquibase.properties:/liquibase/liquibase.properties

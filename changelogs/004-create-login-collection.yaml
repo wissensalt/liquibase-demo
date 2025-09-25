@@ -1,0 +1,22 @@
+databaseChangeLog:
+  - changeSet:
+      id: 4
+      author: fauzi
+      changes:
+        - createCollection:
+            collectionName: login
+            options:
+              validator:
+                $jsonSchema:
+                  bsonType: "object"
+                  required: ["user_id", "login_time"]
+                  properties:
+                    user_id:
+                      bsonType: "objectId"
+                      description: "must be an objectId and is required"
+                    login_time:
+                      bsonType: "timestamp"
+                      description: "must be a timestamp and is required"
+      rollback:
+        - dropCollection:
+            collectionName: login            

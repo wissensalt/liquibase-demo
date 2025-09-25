@@ -1,9 +1,9 @@
 databaseChangeLog:
   - include:
-      file: changelog/001-create-users-table.yaml
+      file: changelog/001-create-users-collection.yaml
   - include:
       file: changelog/002-insert-users-data.yaml
   - include:
-      file: changelog/003-add-created-at-column.yaml
+      file: changelog/003-create-username-index.yaml
   - include:
-      file: changelog/004-add-index-username.yaml
+      file: changelog/004-create-login-collection.yaml

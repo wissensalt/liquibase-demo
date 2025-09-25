@@ -3,25 +3,43 @@ databaseChangeLog:
       id: 2
       author: fauzi
       changes:
-        - insert:
-            tableName: users
-            columns:
-              - column:
-                  name: username
-                  value: alice
-              - column:
-                  name: email
-                  value: alice@example.com
-        - insert:
-            tableName: users
-            columns:
-              - column:
-                  name: username
-                  value: bob
-              - column:
-                  name: email
-                  value: bob@example.com
+        - runCommand:
+            command: |
+              {
+                  "insert": "users",
+                  "documents": [
+                      {
+                          "username": "alice",
+                          "email": "alice@example.com",
+                          "createdAt": {
+                              "$date": "2025-09-24T00:00:00Z"
+                          }
+                      },
+                      {
+                          "username": "bob",
+                          "email": "bob@example.com",
+                          "createdAt": {
+                              "$date": "2025-09-24T00:00:00Z"
+                          }
+                      }
+                  ]
+              }            
       rollback:
-        - delete:
-            tableName: users
-            where: username IN ('alice', 'bob')
+        - runCommand:
+            command: |
+              {
+                  "delete": "users",
+                  "deletes": [
+                      {
+                          "q": {
+                              "username": {
+                                  "$in": [
+                                      "alice",
+                                      "bob"
+                                  ]
+                              }
+                          },
+                          "limit": 0
+                      }
+                  ]
+              }

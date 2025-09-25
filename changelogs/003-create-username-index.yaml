@@ -1,0 +1,26 @@
+databaseChangeLog:
+  - changeSet:
+      id: 3
+      author: fauzi
+      changes:
+        - runCommand:
+            command: |
+              {
+                  "createIndexes": "users",
+                  "indexes": [
+                      {
+                          "key": {
+                              "username": 1
+                          },
+                          "name": "username_unique_idx",
+                          "unique": true
+                      }
+                  ]
+              }            
+      rollback:
+        - runCommand:
+            command: |
+              {
+                  "dropIndexes": "users",
+                  "index": "username_unique_idx"
+              }
