@@ -12,11 +12,24 @@ services:
     volumes:
       - ./data:/var/lib/mysql
 
+  db-init:
+    image: mysql:8
+    container_name: db_init
+    depends_on:
+      - mysql
+    volumes:
+      - ./scripts:/scripts
+    command: bash -c "chmod +x /scripts/init-db.sh && /scripts/init-db.sh"
+    restart: "no"
+    environment:
+      - MYSQL_PWD=password
+
   liquibase:
     image: liquibase/liquibase:4.33-alpine
     container_name: liquibase_cli
     depends_on:
       - mysql
+      - db-init
     volumes:
       - ./changelogs:/liquibase/changelog
       - ./liquibase.properties:/liquibase/liquibase.properties

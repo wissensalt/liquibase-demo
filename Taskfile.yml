@@ -11,6 +11,16 @@ tasks:
     cmds:
       - docker compose down
     desc: Stop MySQL server + liquibase cli Docker container
+  generate-change-log:
+    desc: Generate changelog from existing database + save to file
+    cmds:
+      - docker exec -it liquibase_cli liquibase generateChangeLog --changeLogFile=changelogs/generated-changelog.yaml
+      - docker cp liquibase_cli:/liquibase/changelogs/generated-changelog.yaml ./changelogs/generated-changelog.yaml
+      - echo "Changelog generated and copied to local changelogs/generated-changelog.yaml"
+  sync-db:
+    cmds:
+      - docker exec -it liquibase_cli liquibase changelogSync
+    desc: Sync database with changelog file without running migration
   migrate:
     cmds:
       - docker exec -it liquibase_cli liquibase update

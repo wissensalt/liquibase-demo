@@ -1,9 +1,11 @@
-databaseChangeLog:
-  - include:
-      file: changelog/001-create-users-table.yaml
-  - include:
-      file: changelog/002-insert-users-data.yaml
-  - include:
-      file: changelog/003-add-created-at-column.yaml
-  - include:
-      file: changelog/004-add-index-username.yaml
+# databaseChangeLog:
+#   - include:
+#       file: changelog/generated-changelog.yaml
+#   - include:
+#       file: changelog/001-create-users-table.yaml
+#   - include:
+#       file: changelog/002-insert-users-data.yaml
+#   - include:
+#       file: changelog/003-add-created-at-column.yaml
+#   - include:
+#       file: changelog/004-add-index-username.yaml
