@@ -5,8 +5,12 @@ version: '3'
 tasks:
   start-server:
     cmds:
-      - docker compose up -d
+      - docker compose up --build -d
     desc: Start MySQL server + liquibase cli using Docker
+  stop-server:
+    cmds:
+      - docker compose down
+    desc: Stop MySQL server + liquibase cli Docker containers
   migrate:
     cmds:
       - docker exec -it liquibase_cli liquibase update
