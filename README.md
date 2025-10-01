@@ -2,6 +2,14 @@
 
 A comprehensive demonstration of database migration management using Liquibase with different database technologies and deployment scenarios.
 
+## Requirements
+
+1. Support multi databases
+2. Simple with raw SQL query, easy to use and maintain
+3. Standalone as migration tool, no need to integrate with any programming language
+4. Allow Rollbacks to undo a database change
+5. Tracking schema change & version control
+
 ## 🎯 Overview
 
 This project showcases various Liquibase implementations across different branches, demonstrating database migration best practices with Docker containerization and automated task management.
