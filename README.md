@@ -12,7 +12,19 @@ A comprehensive demonstration of database migration management using Liquibase w
 
 ## 🎯 Overview
 
-This project showcases various Liquibase implementations across different branches, demonstrating database migration best practices with Docker containerization and automated task management.
+This project showcases various Liquibase implementations across different branches, demonstrating database migration best practices with Docker containerization, automated task management, and **GitHub Actions CI/CD pipelines**.
+
+## 🔥 New: GitHub Actions Integration
+
+This repository now includes comprehensive GitHub Actions workflows for secure database migrations on your VPS! 
+
+- 🚀 **Automated migrations** on push to main branch
+- 🔒 **Secure credential management** with GitHub Secrets
+- 🎯 **Manual operation triggers** for all Taskfile commands
+- 📊 **Environment-specific deployments** (dev/staging/prod)
+- ✅ **PR validation** with SQL preview generation
+
+📖 **[Complete GitHub Actions Setup Guide](./GITHUB_ACTIONS_GUIDE.md)**
 
 ## 🌟 Features
 
@@ -74,6 +86,8 @@ liquibase-demo/
 
 ## 📋 Available Tasks
 
+### Local Development (Docker)
+
 | Task | Description |
 |------|-------------|
 | `task start-server` | Start MySQL server + Liquibase CLI using Docker |
@@ -85,6 +99,17 @@ liquibase-demo/
 | `task sync-db` | Sync database with changelog without running migrations |
 | `task generate-change-log` | Generate changelog from existing database |
 | `task clear` | Clear migration checksums |
+
+### Production/VPS (GitHub Actions)
+
+All tasks above are available via GitHub Actions workflows for secure VPS database operations:
+
+- 🎯 **Manual Triggers**: Run any operation on-demand through GitHub Actions UI
+- 🔄 **Automatic Migrations**: Auto-deploy on push to main branch
+- 🛡️ **Secure Credentials**: Environment-specific secret management
+- 📊 **Multi-Environment**: Support for dev/staging/production environments
+
+**[📖 See complete GitHub Actions setup guide](./GITHUB_ACTIONS_GUIDE.md)**
 
 ## 🌿 Branch Overview
 

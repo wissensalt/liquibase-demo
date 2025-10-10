@@ -1,0 +1,231 @@
+name: Database Migration with Liquibase
+
+on:
+  # Manual trigger with operation selection
+  workflow_dispatch:
+    inputs:
+      operation:
+        description: 'Liquibase operation to perform'
+        required: true
+        default: 'status'
+        type: choice
+        options:
+          - migrate
+          - rollback
+          - status
+          - history
+          - clear
+      rollback_count:
+        description: 'Number of changesets to rollback (only for rollback operation)'
+        required: false
+        default: '1'
+  
+  # Automatic migration on push to main/master branch
+  push:
+    branches: [ main, master ]
+    paths:
+      - 'changelogs/**'
+      - 'liquibase.properties'
+  
+  # Automatic migration on pull request
+  pull_request:
+    branches: [ main, master ]
+    paths:
+      - 'changelogs/**'
+      - 'liquibase.properties'
+
+env:
+  LIQUIBASE_VERSION: '4.33'
+
+jobs:
+  # Job for database migration operations
+  liquibase-operation:
+    runs-on: ubuntu-latest
+    name: Liquibase ${{ github.event.inputs.operation || 'migrate' }}
+    
+    # Only run on manual trigger or push to main/master
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && contains(fromJson('["main", "master"]'), github.ref_name))
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Liquibase
+        uses: liquibase/setup-liquibase@v2
+        with:
+          liquibase-version: ${{ env.LIQUIBASE_VERSION }}
+          
+      - name: Download MySQL JDBC Driver
+        run: |
+          mkdir -p drivers
+          wget -O drivers/mysql-connector-j-9.4.0.jar https://repo1.maven.org/maven2/com/mysql/mysql-connector-j/9.4.0/mysql-connector-j-9.4.0.jar
+          
+      - name: Create secure liquibase.properties
+        run: |
+          cat > liquibase.properties << EOF
+          # Connection settings
+          url=jdbc:mysql://${{ secrets.DB_HOST }}:${{ secrets.DB_PORT || '3306' }}/${{ secrets.DB_NAME }}
+          username=${{ secrets.DB_USERNAME }}
+          password=${{ secrets.DB_PASSWORD }}
+          driver=com.mysql.cj.jdbc.Driver
+          classpath=drivers/mysql-connector-j-9.4.0.jar
+          
+          # Changelog file
+          changeLogFile=changelogs/changelog-root.yaml
+          
+          # Output settings
+          logLevel=info
+          EOF
+          
+      - name: Validate connection
+        run: |
+          echo "Testing database connection..."
+          liquibase status --verbose
+          
+      - name: Execute Liquibase Operation
+        run: |
+          case "${{ github.event.inputs.operation || 'migrate' }}" in
+            "migrate")
+              echo "Running database migration..."
+              liquibase update
+              ;;
+            "rollback")
+              echo "Rolling back ${{ github.event.inputs.rollback_count || '1' }} changeset(s)..."
+              liquibase rollbackCount ${{ github.event.inputs.rollback_count || '1' }}
+              ;;
+            "status")
+              echo "Checking migration status..."
+              liquibase status --verbose
+              ;;
+            "history")
+              echo "Showing migration history..."
+              liquibase history
+              ;;
+            "clear")
+              echo "Clearing checksums..."
+              liquibase clearCheckSums
+              ;;
+            *)
+              echo "Unknown operation: ${{ github.event.inputs.operation }}"
+              exit 1
+              ;;
+          esac
+          
+      - name: Post-operation status
+        if: always()
+        run: |
+          echo "Final database status:"
+          liquibase status
+
+  # Job for PR validation (dry-run)
+  liquibase-validate:
+    runs-on: ubuntu-latest
+    name: Validate Liquibase Changes
+    
+    # Only run on pull requests
+    if: github.event_name == 'pull_request'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Liquibase
+        uses: liquibase/setup-liquibase@v2
+        with:
+          liquibase-version: ${{ env.LIQUIBASE_VERSION }}
+          
+      - name: Download MySQL JDBC Driver
+        run: |
+          mkdir -p drivers
+          wget -O drivers/mysql-connector-j-9.4.0.jar https://repo1.maven.org/maven2/com/mysql/mysql-connector-j/9.4.0/mysql-connector-j-9.4.0.jar
+          
+      - name: Create secure liquibase.properties
+        run: |
+          cat > liquibase.properties << EOF
+          # Connection settings
+          url=jdbc:mysql://${{ secrets.DB_HOST }}:${{ secrets.DB_PORT || '3306' }}/${{ secrets.DB_NAME }}
+          username=${{ secrets.DB_USERNAME }}
+          password=${{ secrets.DB_PASSWORD }}
+          driver=com.mysql.cj.jdbc.Driver
+          classpath=drivers/mysql-connector-j-9.4.0.jar
+          
+          # Changelog file
+          changeLogFile=changelogs/changelog-root.yaml
+          
+          # Output settings
+          logLevel=info
+          EOF
+          
+      - name: Validate changelog syntax
+        run: |
+          echo "Validating changelog syntax..."
+          liquibase validate
+          
+      - name: Check pending changes
+        run: |
+          echo "Checking for pending changes..."
+          liquibase status --verbose
+          
+      - name: Generate update SQL (dry-run)
+        run: |
+          echo "Generating SQL for pending changes..."
+          liquibase updateSQL > migration-preview.sql
+          echo "SQL Preview:"
+          cat migration-preview.sql
+          
+      - name: Upload SQL Preview
+        uses: actions/upload-artifact@v4
+        with:
+          name: migration-preview-sql
+          path: migration-preview.sql
+          retention-days: 30
+
+  # Job for database health check
+  database-health-check:
+    runs-on: ubuntu-latest
+    name: Database Health Check
+    
+    # Run on all triggers
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Liquibase
+        uses: liquibase/setup-liquibase@v2
+        with:
+          liquibase-version: ${{ env.LIQUIBASE_VERSION }}
+          
+      - name: Download MySQL JDBC Driver
+        run: |
+          mkdir -p drivers
+          wget -O drivers/mysql-connector-j-9.4.0.jar https://repo1.maven.org/maven2/com/mysql/mysql-connector-j/9.4.0/mysql-connector-j-9.4.0.jar
+          
+      - name: Create secure liquibase.properties
+        run: |
+          cat > liquibase.properties << EOF
+          # Connection settings
+          url=jdbc:mysql://${{ secrets.DB_HOST }}:${{ secrets.DB_PORT || '3306' }}/${{ secrets.DB_NAME }}
+          username=${{ secrets.DB_USERNAME }}
+          password=${{ secrets.DB_PASSWORD }}
+          driver=com.mysql.cj.jdbc.Driver
+          classpath=drivers/mysql-connector-j-9.4.0.jar
+          
+          # Changelog file
+          changeLogFile=changelogs/changelog-root.yaml
+          
+          # Output settings
+          logLevel=info
+          EOF
+          
+      - name: Database connectivity test
+        run: |
+          echo "Testing database connectivity..."
+          timeout 30s liquibase status || {
+            echo "Database connection failed or timed out"
+            exit 1
+          }
+          
+      - name: Check database locks
+        run: |
+          echo "Checking for database locks..."
+          mysql -h ${{ secrets.DB_HOST }} -P ${{ secrets.DB_PORT || '3306' }} -u ${{ secrets.DB_USERNAME }} -p${{ secrets.DB_PASSWORD }} ${{ secrets.DB_NAME }} -e "SELECT * FROM DATABASECHANGELOGLOCK;" || echo "No lock table found or accessible"
