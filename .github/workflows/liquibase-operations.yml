@@ -1,0 +1,230 @@
+name: Individual Liquibase Operations
+
+on:
+  workflow_dispatch:
+    inputs:
+      operation:
+        description: 'Select Liquibase operation'
+        required: true
+        type: choice
+        options:
+          - migrate
+          - rollback
+          - status
+          - history
+          - clear
+        default: 'status'
+      rollback_count:
+        description: 'Number of changesets to rollback (for rollback only)'
+        required: false
+        default: '1'
+      environment:
+        description: 'Target environment'
+        required: true
+        type: choice
+        options:
+          - development
+          - staging
+          - production
+        default: 'development'
+
+jobs:
+  # Migration job - equivalent to Taskfile 'migrate'
+  migrate:
+    if: github.event.inputs.operation == 'migrate'
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Liquibase
+        uses: liquibase/setup-liquibase@v2
+        with:
+          liquibase-version: '4.33'
+          
+      - name: Download MySQL JDBC Driver
+        run: |
+          mkdir -p drivers
+          wget -O drivers/mysql-connector-j-9.4.0.jar https://repo1.maven.org/maven2/com/mysql/mysql-connector-j/9.4.0/mysql-connector-j-9.4.0.jar
+          
+      - name: Create liquibase.properties
+        run: |
+          cat > liquibase.properties << EOF
+          url=jdbc:mysql://${{ secrets.DB_HOST }}:${{ secrets.DB_PORT || '3306' }}/${{ secrets.DB_NAME }}
+          username=${{ secrets.DB_USERNAME }}
+          password=${{ secrets.DB_PASSWORD }}
+          driver=com.mysql.cj.jdbc.Driver
+          classpath=drivers/mysql-connector-j-9.4.0.jar
+          changeLogFile=changelogs/changelog-root.yaml
+          logLevel=info
+          EOF
+          
+      - name: Run Migration
+        run: |
+          echo "🚀 Running database migration on ${{ github.event.inputs.environment }}..."
+          liquibase update
+          echo "✅ Migration completed successfully!"
+
+  # Rollback job - equivalent to Taskfile 'rollback'
+  rollback:
+    if: github.event.inputs.operation == 'rollback'
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Liquibase
+        uses: liquibase/setup-liquibase@v2
+        with:
+          liquibase-version: '4.33'
+          
+      - name: Download MySQL JDBC Driver
+        run: |
+          mkdir -p drivers
+          wget -O drivers/mysql-connector-j-9.4.0.jar https://repo1.maven.org/maven2/com/mysql/mysql-connector-j/9.4.0/mysql-connector-j-9.4.0.jar
+          
+      - name: Create liquibase.properties
+        run: |
+          cat > liquibase.properties << EOF
+          url=jdbc:mysql://${{ secrets.DB_HOST }}:${{ secrets.DB_PORT || '3306' }}/${{ secrets.DB_NAME }}
+          username=${{ secrets.DB_USERNAME }}
+          password=${{ secrets.DB_PASSWORD }}
+          driver=com.mysql.cj.jdbc.Driver
+          classpath=drivers/mysql-connector-j-9.4.0.jar
+          changeLogFile=changelogs/changelog-root.yaml
+          logLevel=info
+          EOF
+          
+      - name: Confirm Rollback Operation
+        run: |
+          echo "⚠️  WARNING: This will rollback ${{ github.event.inputs.rollback_count }} changeset(s) on ${{ github.event.inputs.environment }}"
+          echo "📋 Current status:"
+          liquibase status
+          
+      - name: Execute Rollback
+        run: |
+          echo "🔄 Rolling back ${{ github.event.inputs.rollback_count }} changeset(s)..."
+          liquibase rollbackCount ${{ github.event.inputs.rollback_count }}
+          echo "✅ Rollback completed!"
+          echo "📋 New status:"
+          liquibase status
+
+  # Status check job - equivalent to Taskfile 'status'
+  status:
+    if: github.event.inputs.operation == 'status'
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Liquibase
+        uses: liquibase/setup-liquibase@v2
+        with:
+          liquibase-version: '4.33'
+          
+      - name: Download MySQL JDBC Driver
+        run: |
+          mkdir -p drivers
+          wget -O drivers/mysql-connector-j-9.4.0.jar https://repo1.maven.org/maven2/com/mysql/mysql-connector-j/9.4.0/mysql-connector-j-9.4.0.jar
+          
+      - name: Create liquibase.properties
+        run: |
+          cat > liquibase.properties << EOF
+          url=jdbc:mysql://${{ secrets.DB_HOST }}:${{ secrets.DB_PORT || '3306' }}/${{ secrets.DB_NAME }}
+          username=${{ secrets.DB_USERNAME }}
+          password=${{ secrets.DB_PASSWORD }}
+          driver=com.mysql.cj.jdbc.Driver
+          classpath=drivers/mysql-connector-j-9.4.0.jar
+          changeLogFile=changelogs/changelog-root.yaml
+          logLevel=info
+          EOF
+          
+      - name: Check Migration Status
+        run: |
+          echo "📊 Checking migration status for ${{ github.event.inputs.environment }}..."
+          liquibase status --verbose
+          echo "✅ Status check completed!"
+
+  # History job - equivalent to Taskfile 'history'
+  history:
+    if: github.event.inputs.operation == 'history'
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Liquibase
+        uses: liquibase/setup-liquibase@v2
+        with:
+          liquibase-version: '4.33'
+          
+      - name: Download MySQL JDBC Driver
+        run: |
+          mkdir -p drivers
+          wget -O drivers/mysql-connector-j-9.4.0.jar https://repo1.maven.org/maven2/com/mysql/mysql-connector-j/9.4.0/mysql-connector-j-9.4.0.jar
+          
+      - name: Create liquibase.properties
+        run: |
+          cat > liquibase.properties << EOF
+          url=jdbc:mysql://${{ secrets.DB_HOST }}:${{ secrets.DB_PORT || '3306' }}/${{ secrets.DB_NAME }}
+          username=${{ secrets.DB_USERNAME }}
+          password=${{ secrets.DB_PASSWORD }}
+          driver=com.mysql.cj.jdbc.Driver
+          classpath=drivers/mysql-connector-j-9.4.0.jar
+          changeLogFile=changelogs/changelog-root.yaml
+          logLevel=info
+          EOF
+          
+      - name: Show Migration History
+        run: |
+          echo "📜 Showing migration history for ${{ github.event.inputs.environment }}..."
+          liquibase history
+          echo "✅ History retrieved successfully!"
+
+  # Clear checksums job - equivalent to Taskfile 'clear'
+  clear:
+    if: github.event.inputs.operation == 'clear'
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Liquibase
+        uses: liquibase/setup-liquibase@v2
+        with:
+          liquibase-version: '4.33'
+          
+      - name: Download MySQL JDBC Driver
+        run: |
+          mkdir -p drivers
+          wget -O drivers/mysql-connector-j-9.4.0.jar https://repo1.maven.org/maven2/com/mysql/mysql-connector-j/9.4.0/mysql-connector-j-9.4.0.jar
+          
+      - name: Create liquibase.properties
+        run: |
+          cat > liquibase.properties << EOF
+          url=jdbc:mysql://${{ secrets.DB_HOST }}:${{ secrets.DB_PORT || '3306' }}/${{ secrets.DB_NAME }}
+          username=${{ secrets.DB_USERNAME }}
+          password=${{ secrets.DB_PASSWORD }}
+          driver=com.mysql.cj.jdbc.Driver
+          classpath=drivers/mysql-connector-j-9.4.0.jar
+          changeLogFile=changelogs/changelog-root.yaml
+          logLevel=info
+          EOF
+          
+      - name: Clear Checksums
+        run: |
+          echo "🧹 Clearing Liquibase checksums for ${{ github.event.inputs.environment }}..."
+          liquibase clearCheckSums
+          echo "✅ Checksums cleared successfully!"
+          echo "📋 Current status:"
+          liquibase status
