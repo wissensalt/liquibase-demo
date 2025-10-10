@@ -4,21 +4,23 @@ This document outlines the required GitHub repository secrets for secure databas
 
 ## Required Secrets
 
-Configure the following secrets in your GitHub repository settings (`Settings > Secrets and variables > Actions`):
+Configure the following secrets in your GitHub repository settings (
+`Settings > Secrets and variables > Actions`):
 
 ### Database Connection Secrets
 
-| Secret Name | Description | Example Value | Required |
-|-------------|-------------|---------------|----------|
-| `DB_HOST` | Database server hostname or IP address | `your-vps-ip.com` or `192.168.1.100` | ✅ Yes |
-| `DB_PORT` | Database server port | `3306` | ❌ Optional (defaults to 3306) |
-| `DB_NAME` | Database name | `liquibase_db` | ✅ Yes |
-| `DB_USERNAME` | Database username | `liquibase_user` | ✅ Yes |
-| `DB_PASSWORD` | Database password | `your-secure-password` | ✅ Yes |
+| Secret Name   | Description                            | Example Value                        | Required                      |
+|---------------|----------------------------------------|--------------------------------------|-------------------------------|
+| `DB_HOST`     | Database server hostname or IP address | `your-vps-ip.com` or `192.168.1.100` | ✅ Yes                         |
+| `DB_PORT`     | Database server port                   | `3306`                               | ❌ Optional (defaults to 3306) |
+| `DB_NAME`     | Database name                          | `liquibase_db`                       | ✅ Yes                         |
+| `DB_USERNAME` | Database username                      | `liquibase_user`                     | ✅ Yes                         |
+| `DB_PASSWORD` | Database password                      | `your-secure-password`               | ✅ Yes                         |
 
 ## Security Best Practices
 
 ### 1. Database User Permissions
+
 Create a dedicated database user for Liquibase operations with minimal required permissions:
 
 ```sql
@@ -36,23 +38,27 @@ FLUSH PRIVILEGES;
 ```
 
 ### 2. Network Security
+
 - **Firewall**: Restrict database access to specific IP addresses (GitHub Actions IP ranges)
 - **SSL/TLS**: Enable encrypted connections to your database
 - **VPN**: Consider using a VPN for additional security layer
 
 ### 3. Password Security
+
 - Use strong, unique passwords (minimum 16 characters)
 - Consider using password managers
 - Rotate passwords regularly
 - Never commit passwords to version control
 
 ### 4. GitHub Repository Security
+
 - Enable branch protection rules
 - Require pull request reviews for changelog modifications
 - Enable "Restrict pushes that create files" to prevent accidental secret exposure
 - Use environment protection rules for production deployments
 
 ### 5. Monitoring and Auditing
+
 - Enable database audit logging
 - Monitor for unauthorized access attempts
 - Set up alerts for failed authentication attempts
@@ -61,6 +67,7 @@ FLUSH PRIVILEGES;
 ## Environment-Specific Configuration
 
 ### Development Environment
+
 ```bash
 # For development, you can use environment-specific secrets
 DB_HOST_DEV=dev-database.company.com
@@ -68,12 +75,14 @@ DB_NAME_DEV=liquibase_db_dev
 ```
 
 ### Staging Environment
+
 ```bash
 DB_HOST_STAGING=staging-database.company.com
 DB_NAME_STAGING=liquibase_db_staging
 ```
 
 ### Production Environment
+
 ```bash
 DB_HOST_PRODUCTION=prod-database.company.com
 DB_NAME_PRODUCTION=liquibase_db_prod
@@ -90,6 +99,7 @@ DB_NAME_PRODUCTION=liquibase_db_prod
 ## Troubleshooting
 
 ### Connection Issues
+
 If you encounter database connection issues:
 
 1. Verify all secrets are correctly set
@@ -98,6 +108,7 @@ If you encounter database connection issues:
 4. Test connection from a similar environment
 
 ### Permission Issues
+
 If you get permission errors:
 
 1. Verify the database user has all required grants
@@ -107,6 +118,7 @@ If you get permission errors:
 ## Additional Security Measures
 
 ### IP Whitelisting
+
 GitHub Actions runners use dynamic IP addresses. For enhanced security, consider:
 
 1. Using GitHub's published IP ranges
@@ -114,12 +126,15 @@ GitHub Actions runners use dynamic IP addresses. For enhanced security, consider
 3. Using a bastion host for database access
 
 ### Connection Encryption
+
 Add SSL parameters to your connection URL:
+
 ```
 url=jdbc:mysql://your-host:3306/your-db?useSSL=true&requireSSL=true&verifyServerCertificate=true
 ```
 
 ### Backup Strategy
+
 Before running migrations in production:
 
 1. Create database backups

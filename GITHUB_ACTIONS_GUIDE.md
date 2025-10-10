@@ -1,24 +1,28 @@
 # Liquibase GitHub Actions Migration Guide
 
-This repository now includes comprehensive GitHub Actions workflows to manage database migrations using Liquibase on your VPS MySQL database. The workflows provide secure, automated database operations equivalent to your existing `Taskfile.yml` commands.
+This repository now includes comprehensive GitHub Actions workflows to manage database migrations
+using Liquibase on your VPS MySQL database. The workflows provide secure, automated database
+operations equivalent to your existing `Taskfile.yml` commands.
 
 ## 🚀 Quick Start
 
 ### 1. Set Up GitHub Secrets
 
-Configure the following secrets in your GitHub repository (`Settings > Secrets and variables > Actions`):
+Configure the following secrets in your GitHub repository (
+`Settings > Secrets and variables > Actions`):
 
-| Secret | Description | Example |
-|--------|-------------|---------|
-| `DB_HOST` | Your VPS database hostname/IP | `your-vps.example.com` |
-| `DB_PORT` | Database port (optional, defaults to 3306) | `3306` |
-| `DB_NAME` | Database name | `liquibase_db` |
-| `DB_USERNAME` | Database username | `liquibase_user` |
-| `DB_PASSWORD` | Database password | `your-secure-password` |
+| Secret        | Description                                | Example                |
+|---------------|--------------------------------------------|------------------------|
+| `DB_HOST`     | Your VPS database hostname/IP              | `your-vps.example.com` |
+| `DB_PORT`     | Database port (optional, defaults to 3306) | `3306`                 |
+| `DB_NAME`     | Database name                              | `liquibase_db`         |
+| `DB_USERNAME` | Database username                          | `liquibase_user`       |
+| `DB_PASSWORD` | Database password                          | `your-secure-password` |
 
 ### 2. Create Environment Protection (Optional but Recommended)
 
 For production safety, set up environment protection rules:
+
 1. Go to `Settings > Environments`
 2. Create environments: `development`, `staging`, `production`
 3. Configure protection rules (required reviewers, deployment branches, etc.)
@@ -28,11 +32,13 @@ For production safety, set up environment protection rules:
 ### 1. Main Liquibase Workflow (`liquibase.yml`)
 
 **Triggers:**
+
 - Manual dispatch with operation selection
 - Automatic migration on push to `main`/`master` (when changelog files change)
 - Validation on pull requests
 
 **Features:**
+
 - ✅ Secure credential handling
 - ✅ Database connectivity validation
 - ✅ Post-operation status checks
@@ -42,6 +48,7 @@ For production safety, set up environment protection rules:
 ### 2. Individual Operations Workflow (`liquibase-operations.yml`)
 
 **Manual trigger only** - Provides dedicated jobs for each Taskfile operation:
+
 - 🔄 **migrate** - Run database migrations
 - ⏪ **rollback** - Rollback specified number of changesets
 - 📊 **status** - Check migration status
@@ -53,6 +60,7 @@ For production safety, set up environment protection rules:
 ### Running Migrations
 
 #### Automatic (Recommended for CI/CD)
+
 ```bash
 # Push changes to main branch - triggers automatic migration
 git add changelogs/005-new-feature.yaml
@@ -61,6 +69,7 @@ git push origin main
 ```
 
 #### Manual Execution
+
 1. Go to `Actions` tab in your GitHub repository
 2. Select "Database Migration with Liquibase"
 3. Click "Run workflow"
@@ -73,9 +82,9 @@ git push origin main
 2. Select "Individual Liquibase Operations"
 3. Click "Run workflow"
 4. Choose:
-   - Operation: `rollback`
-   - Rollback count: `1` (or desired number)
-   - Environment: `production`
+    - Operation: `rollback`
+    - Rollback count: `1` (or desired number)
+    - Environment: `production`
 5. Click "Run workflow"
 
 ### Checking Status
@@ -90,38 +99,41 @@ git push origin main
 ## 🔒 Security Features
 
 ### Database Connection Security
+
 - All credentials stored as GitHub secrets
 - No sensitive data in workflow files
 - Secure property file generation at runtime
 
 ### Access Control
+
 - Environment-based protection rules
 - Manual approval for production deployments
 - Audit trail for all operations
 
 ### Network Security
+
 - Supports SSL/TLS database connections
 - IP whitelisting recommendations
 - VPN integration guidelines
 
 ## 🔧 Equivalent Commands
 
-| Taskfile Command | GitHub Actions Equivalent |
-|------------------|---------------------------|
-| `task start-server` | Not applicable (uses VPS database) |
-| `task stop-server` | Not applicable (uses VPS database) |
-| `task migrate` | Manual workflow: "migrate" operation |
-| `task rollback` | Manual workflow: "rollback" operation |
-| `task status` | Manual workflow: "status" operation |
-| `task history` | Manual workflow: "history" operation |
-| `task clear` | Manual workflow: "clear" operation |
+| Taskfile Command    | GitHub Actions Equivalent             |
+|---------------------|---------------------------------------|
+| `task start-server` | Not applicable (uses VPS database)    |
+| `task stop-server`  | Not applicable (uses VPS database)    |
+| `task migrate`      | Manual workflow: "migrate" operation  |
+| `task rollback`     | Manual workflow: "rollback" operation |
+| `task status`       | Manual workflow: "status" operation   |
+| `task history`      | Manual workflow: "history" operation  |
+| `task clear`        | Manual workflow: "clear" operation    |
 
 ## 📁 Workflow Structure
 
 ```
 .github/
 ├── workflows/
-│   ├── liquibase.yml              # Main workflow with auto-triggers
+│   ├── liquibase-mysql.yml              # Main workflow with auto-triggers
 │   └── liquibase-operations.yml   # Individual operation workflows
 └── SECURITY.md                    # Security configuration guide
 ```
@@ -133,17 +145,19 @@ git push origin main
 The main workflow automatically triggers on:
 
 1. **Push to main/master** (when these files change):
-   - `changelogs/**`
-   - `liquibase.properties`
+    - `changelogs/**`
+    - `liquibase.properties`
+    - `drivers/**`
 
 2. **Pull Request** (validation only):
-   - Validates changelog syntax
-   - Generates SQL preview
-   - Checks for pending changes
+    - Validates changelog syntax
+    - Generates SQL preview
+    - Checks for pending changes
 
 ### Manual Operations
 
 Both workflows support manual triggering with:
+
 - Operation selection (migrate, rollback, status, history, clear)
 - Environment selection (development, staging, production)
 - Rollback count specification (for rollback operations)
