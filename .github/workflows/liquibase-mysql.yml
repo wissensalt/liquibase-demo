@@ -1,9 +1,17 @@
 name: MySQL DB Migration
 
 on:
-  # Manual trigger with operation selection
+  # Manual trigger with operation and environment selection
   workflow_dispatch:
     inputs:
+      environment:
+        description: 'Target environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
       operation:
         description: 'Liquibase operation to perform'
         required: true
@@ -20,7 +28,7 @@ on:
         required: false
         default: '1'
   
-  # Automatic migration on push to main/master branch
+  # Automatic migration on push to main/master branch (defaults to staging)
   push:
     branches: [ main, master ]
     paths:
@@ -28,7 +36,7 @@ on:
       - 'liquibase.properties'
       - 'drivers/**'
   
-  # Automatic migration on pull request
+  # Automatic migration on pull request (defaults to staging)
   pull_request:
     branches: [ main, master ]
     paths:
@@ -37,30 +45,32 @@ on:
       - 'drivers/**'
 
 env:
-  # Must be a fully qualified version (major.minor.patch) for setup-liquibase@v2 action
   VERSION: '5.0.0'
   EDITION: 'oss'
+  SELECTED_ENV: ${{ github.event.inputs.environment || 'staging' }}
+  DB_HOST: ${{ (github.event.inputs.environment == 'production' && secrets.PROD_DB_HOST) || secrets.STAGING_DB_HOST }}
+  DB_PORT: ${{ (github.event.inputs.environment == 'production' && (secrets.PROD_DB_PORT || '3306')) || (secrets.STAGING_DB_PORT || '3306') }}
+  DB_NAME: ${{ (github.event.inputs.environment == 'production' && secrets.PROD_DB_NAME) || secrets.STAGING_DB_NAME }}
+  DB_USERNAME: ${{ (github.event.inputs.environment == 'production' && secrets.PROD_DB_USERNAME) || secrets.STAGING_DB_USERNAME }}
+  DB_PASSWORD: ${{ (github.event.inputs.environment == 'production' && secrets.PROD_DB_PASSWORD) || secrets.STAGING_DB_PASSWORD }}
 
 jobs:
-  # Job for database health check
   database-health-check:
     runs-on: ubuntu-latest
-    name: Database Health Check
-
-    # Run on all triggers
+    name: Database Health Check - ${{ github.event.inputs.environment }}
     steps:
-      # Reusable steps (anchored) ---------------------------
       - &checkout_step
         name: Checkout code
         uses: actions/checkout@v4
       - &create_props_step
         name: Create secure liquibase.properties
         run: |
+          echo "Preparing liquibase.properties for environment: ${{ env.SELECTED_ENV }}"
           cat > liquibase.properties << EOF
-          # Connection settings
-          url=jdbc:mysql://${{ secrets.DB_HOST }}:${{ secrets.DB_PORT || '3306' }}/${{ secrets.DB_NAME }}
-          username=${{ secrets.DB_USERNAME }}
-          password=${{ secrets.DB_PASSWORD }}
+          # Auto-generated for environment: ${{ env.SELECTED_ENV }}
+          url=jdbc:mysql://${{ env.DB_HOST }}:${{ env.DB_PORT }}/${{ env.DB_NAME }}
+          username=${{ env.DB_USERNAME }}
+          password=${{ env.DB_PASSWORD }}
           driver=com.mysql.cj.jdbc.Driver
           changeLogFile=changelogs/changelog-root.yaml
           classpath=drivers/mysql-connector-j-9.4.0.jar
@@ -74,85 +84,59 @@ jobs:
         with:
           version: ${{ env.VERSION }}
           edition: ${{ env.EDITION }}
-      # End reusable steps ----------------------------------
-
       - name: Database connectivity test
         run: |
-          echo "Testing database connectivity..."
+          echo "Testing database connectivity ${{ env.SELECTED_ENV }}..."
           timeout 30s liquibase status || {
-            echo "Database connection failed or timed out"
-            exit 1
-          }
+            echo "Database connection failed or timed out"; exit 1; }
       - name: Check database locks
         run: |
-          echo "Checking for database locks..."
-          mysql -h ${{ secrets.DB_HOST }} -P ${{ secrets.DB_PORT || '3306' }} -u ${{ secrets.DB_USERNAME }} -p${{ secrets.DB_PASSWORD }} ${{ secrets.DB_NAME }} -e "SELECT * FROM DATABASECHANGELOGLOCK;" || echo "No lock table found or accessible"
+          echo "Checking for database locks ${{ env.SELECTED_ENV }}..."
+          mysql -h ${{ env.DB_HOST }} -P ${{ env.DB_PORT }} -u ${{ env.DB_USERNAME }} -p${{ env.DB_PASSWORD }} ${{ env.DB_NAME }} -e "SELECT * FROM DATABASECHANGELOGLOCK;" || echo "No lock table found or accessible"
 
-  # Job for database migration operations
   liquibase-operation:
     runs-on: ubuntu-latest
-    name: Liquibase ${{ github.event.inputs.operation || 'status' }}
+    name: Liquibase ${{ github.event.inputs.operation || 'status' }} - ${{ github.event.inputs.environment }}
     needs: database-health-check
-
-    # Only run on manual trigger or push to main/master
-    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && contains(fromJson('["main", "master"]'), github.ref_name))
-    
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && contains(fromJson('["main","master"]'), github.ref_name))
     steps:
       - *checkout_step
       - *create_props_step
       - *setup_liquibase_step
       - name: Validate connection
         run: |
-          echo "Testing database connection..."
+          echo "Testing database connection ${{ env.SELECTED_ENV }}"
           liquibase status --verbose
-
       - name: Execute Liquibase Operation
         run: |
           set -e
           OPERATION="${{ github.event.inputs.operation || 'migrate' }}"
+          echo "Executing operation '$OPERATION' on environment ${{ env.SELECTED_ENV }}"
           case "$OPERATION" in
             migrate)
-              echo "Running database migration...";
-              liquibase update;
-              ;;
+              liquibase update;;
             rollback)
-              COUNT="${{ github.event.inputs.rollback_count || '1' }}";
-              echo "Rolling back $COUNT changeset(s)...";
-              liquibase rollbackCount $COUNT;
-              ;;
+              COUNT="${{ github.event.inputs.rollback_count || '1' }}"; liquibase rollbackCount $COUNT;;
             status)
-              echo "Checking migration status...";
-              liquibase status --verbose;
-              ;;
+              liquibase status --verbose;;
             history)
-              echo "Showing migration history...";
-              liquibase history;
-              ;;
+              liquibase history;;
             clear)
-              echo "Clearing checksums...";
-              liquibase clearCheckSums;
-              ;;
+              liquibase clearCheckSums;;
             *)
-              echo "Unknown operation: $OPERATION";
-              exit 1;
-              ;;
+              echo "Unknown operation: $OPERATION"; exit 1;;
           esac
-
       - name: Post-operation status
         if: always()
         run: |
-          echo "Final database status:"
+          echo "Final database status ${{ env.SELECTED_ENV }}"
           liquibase status
 
-  # Job for PR validation (dry-run)
   liquibase-validate:
     runs-on: ubuntu-latest
-    name: Validate Liquibase Changes
+    name: Validate Liquibase Changes - ENV ${{ github.event.inputs.environment }}
     needs: database-health-check
-    
-    # Only run on pull requests
     if: github.event_name == 'pull_request'
-    
     steps:
       - *checkout_step
       - *create_props_step
@@ -163,8 +147,8 @@ jobs:
         run: liquibase status --verbose
       - name: Generate update SQL (dry-run)
         run: |
-          liquibase updateSQL > migration-preview.sql
-          echo "SQL Preview:" && cat migration-preview.sql
+            liquibase updateSQL > migration-preview.sql
+            echo "SQL Preview:" && cat migration-preview.sql
       - name: Upload SQL Preview
         uses: actions/upload-artifact@v4
         with:
