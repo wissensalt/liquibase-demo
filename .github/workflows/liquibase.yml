@@ -35,7 +35,8 @@ on:
       - 'liquibase.properties'
 
 env:
-  LIQUIBASE_VERSION: '4.33'
+  # Must be a fully qualified version (major.minor.patch) for setup-liquibase@v2 action
+  LIQUIBASE_VERSION: '4.33.0'
 
 jobs:
   # Job for database migration operations
@@ -53,8 +54,10 @@ jobs:
       - name: Setup Liquibase
         uses: liquibase/setup-liquibase@v2
         with:
-          liquibase-version: ${{ env.LIQUIBASE_VERSION }}
-          
+          version: ${{ env.LIQUIBASE_VERSION }}
+          edition: community
+          # edition: pro   # Uncomment if using Liquibase Pro and set LICENSE_KEY secret
+
       - name: Download MySQL JDBC Driver
         run: |
           mkdir -p drivers
@@ -132,8 +135,9 @@ jobs:
       - name: Setup Liquibase
         uses: liquibase/setup-liquibase@v2
         with:
-          liquibase-version: ${{ env.LIQUIBASE_VERSION }}
-          
+          version: ${{ env.LIQUIBASE_VERSION }}
+          edition: community
+
       - name: Download MySQL JDBC Driver
         run: |
           mkdir -p drivers
@@ -193,8 +197,9 @@ jobs:
       - name: Setup Liquibase
         uses: liquibase/setup-liquibase@v2
         with:
-          liquibase-version: ${{ env.LIQUIBASE_VERSION }}
-          
+          version: ${{ env.LIQUIBASE_VERSION }}
+          edition: community
+
       - name: Download MySQL JDBC Driver
         run: |
           mkdir -p drivers
