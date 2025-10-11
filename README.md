@@ -1,5 +1,9 @@
 # Liquibase Demo Project
 
+[![MySQL DB Migration](https://github.com/wissensalt/liquibase-demo/actions/workflows/liquibase-mysql.yml/badge.svg?branch=master)](https://github.com/wissensalt/liquibase-demo/actions/workflows/liquibase-mysql.yml)
+
+[![YAML Lint](https://github.com/wissensalt/liquibase-demo/actions/workflows/yamllint.yaml/badge.svg?branch=master)](https://github.com/wissensalt/liquibase-demo/actions/workflows/yamllint.yaml)
+
 A comprehensive demonstration of database migration management using Liquibase with different database technologies and deployment scenarios.
 
 ## Requirements
