@@ -38,30 +38,59 @@ on:
 
 env:
   # Must be a fully qualified version (major.minor.patch) for setup-liquibase@v2 action
-  LIQUIBASE_VERSION: '5.0.0'
+  VERSION: '5.0.0'
+  EDITION: 'oss'
 
 jobs:
+  # Job for database health check
+  database-health-check:
+    runs-on: ubuntu-latest
+    name: Database Health Check
+
+    # Run on all triggers
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Create secure liquibase.properties
+        run: |
+          cat > liquibase.properties << EOF
+          url=jdbc:mysql://${{ secrets.DB_HOST }}:${{ secrets.DB_PORT || '3306' }}/${{ secrets.DB_NAME }}
+          username=${{ secrets.DB_USERNAME }}
+          password=${{ secrets.DB_PASSWORD }}
+          driver=com.mysql.cj.jdbc.Driver
+          changeLogFile=changelogs/changelog-root.yaml
+          classpath=drivers/mysql-connector-j-9.4.0.jar
+          logLevel=info
+          EOF
+      - name: Setup Liquibase
+        uses: liquibase/setup-liquibase@v2.0.0
+        with:
+          version: ${{ env.VERSION }}
+          edition: ${{ env.EDITION }}
+      - name: Database connectivity test
+        run: |
+          echo "Testing database connectivity..."
+          timeout 30s liquibase status || {
+            echo "Database connection failed or timed out"
+            exit 1
+          }
+      - name: Check database locks
+        run: |
+          echo "Checking for database locks..."
+          mysql -h ${{ secrets.DB_HOST }} -P ${{ secrets.DB_PORT || '3306' }} -u ${{ secrets.DB_USERNAME }} -p${{ secrets.DB_PASSWORD }} ${{ secrets.DB_NAME }} -e "SELECT * FROM DATABASECHANGELOGLOCK;" || echo "No lock table found or accessible"
+
   # Job for database migration operations
   liquibase-operation:
     runs-on: ubuntu-latest
     name: Liquibase ${{ github.event.inputs.operation || 'migrate' }}
-    
+    needs: database-health-check
+
     # Only run on manual trigger or push to main/master
     if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && contains(fromJson('["main", "master"]'), github.ref_name))
     
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-#      - name: Install MySQL Driver (LPM)
-#        run: |
-#          set -euo pipefail
-#          liquibase --version
-#          echo "Installing MySQL JDBC driver via Liquibase Package Manager..."
-#          liquibase lpm add mysql --global
-#          echo "Installed packages:" || true
-#          liquibase lpm list || true
-
       - name: Create secure liquibase.properties
         run: |
           cat > liquibase.properties << EOF
@@ -76,14 +105,11 @@ jobs:
           EOF
           echo 'Generated liquibase.properties:'
           cat liquibase.properties
-
-
       - name: Setup Liquibase
         uses: liquibase/setup-liquibase@v2.0.0
         with:
-          version: ${{ env.LIQUIBASE_VERSION }}
-          edition: 'oss'
-
+          version: ${{ env.VERSION }}
+          edition: ${{ env.EDITION }}
       - name: Validate connection
         run: |
           echo "Testing database connection with LPM-provided driver..."
@@ -138,11 +164,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-#      - name: Install MySQL Driver (LPM)
-#        run: |
-#          set -euo pipefail
-#          liquibase lpm add mysql --global
-#          liquibase lpm list || true
       - name: Create secure liquibase.properties
         run: |
           cat > liquibase.properties << EOF
@@ -157,8 +178,8 @@ jobs:
       - name: Setup Liquibase
         uses: liquibase/setup-liquibase@v2.0.0
         with:
-          version: ${{ env.LIQUIBASE_VERSION }}
-          edition: 'oss'
+          version: ${{ env.VERSION }}
+          edition: ${{ env.EDITION }}
       - name: Validate changelog syntax
         run: liquibase validate
       - name: Check pending changes
@@ -173,45 +194,3 @@ jobs:
           name: migration-preview-sql
           path: migration-preview.sql
           retention-days: 30
-
-  # Job for database health check
-  database-health-check:
-    runs-on: ubuntu-latest
-    name: Database Health Check
-    
-    # Run on all triggers
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-#      - name: Install MySQL Driver (LPM)
-#        run: |
-#          set -euo pipefail
-#          liquibase lpm add mysql --global
-      - name: Create secure liquibase.properties
-        run: |
-          cat > liquibase.properties << EOF
-          url=jdbc:mysql://${{ secrets.DB_HOST }}:${{ secrets.DB_PORT || '3306' }}/${{ secrets.DB_NAME }}
-          username=${{ secrets.DB_USERNAME }}
-          password=${{ secrets.DB_PASSWORD }}
-          driver=com.mysql.cj.jdbc.Driver
-          changeLogFile=changelogs/changelog-root.yaml
-          classpath=drivers/mysql-connector-j-9.4.0.jar
-          logLevel=info
-          EOF
-      - name: Setup Liquibase
-        uses: liquibase/setup-liquibase@v2.0.0
-        with:
-          version: ${{ env.LIQUIBASE_VERSION }}
-          edition: 'oss'
-      - name: Database connectivity test
-        run: |
-          echo "Testing database connectivity..."
-          timeout 30s liquibase status || {
-            echo "Database connection failed or timed out"
-            exit 1
-          }
-      - name: Check database locks
-        run: |
-          echo "Checking for database locks..."
-          mysql -h ${{ secrets.DB_HOST }} -P ${{ secrets.DB_PORT || '3306' }} -u ${{ secrets.DB_USERNAME }} -p${{ secrets.DB_PASSWORD }} ${{ secrets.DB_NAME }} -e "SELECT * FROM DATABASECHANGELOGLOCK;" || echo "No lock table found or accessible"
-
