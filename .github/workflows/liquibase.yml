@@ -36,7 +36,7 @@ on:
 
 env:
   # Must be a fully qualified version (major.minor.patch) for setup-liquibase@v2 action
-  LIQUIBASE_VERSION: '4.33.0'
+  LIQUIBASE_VERSION: '5.0.0'
 
 jobs:
   # Job for database migration operations
@@ -52,17 +52,19 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup Liquibase
-        uses: liquibase/setup-liquibase@v2
+        uses: liquibase/setup-liquibase@v2.0.0
         with:
           version: ${{ env.LIQUIBASE_VERSION }}
-          edition: oss
-          # edition: pro   # Uncomment if using Liquibase Pro and set LICENSE_KEY secret
+          edition: 'oss'
 
-      - name: Download MySQL JDBC Driver
+      - name: Install MySQL Driver (LPM)
         run: |
-          mkdir -p drivers
-          wget -O drivers/mysql-connector-j-9.4.0.jar https://repo1.maven.org/maven2/com/mysql/mysql-connector-j/9.4.0/mysql-connector-j-9.4.0.jar
-          ls -l drivers
+          set -euo pipefail
+          liquibase --version
+          echo "Installing MySQL JDBC driver via Liquibase Package Manager..."
+          liquibase lpm add mysql --global
+          echo "Installed packages:" || true
+          liquibase lpm list || true
 
       - name: Create secure liquibase.properties
         run: |
@@ -80,38 +82,38 @@ jobs:
 
       - name: Validate connection
         run: |
-          echo "Testing database connection (explicit classpath)..."
-          liquibase --classpath=drivers/mysql-connector-j-9.4.0.jar status --verbose
+          echo "Testing database connection with LPM-provided driver..."
+          liquibase status --verbose
 
       - name: Execute Liquibase Operation
         run: |
-          CLASS_PATH_OPT="--classpath=drivers/mysql-connector-j-9.4.0.jar"
+          set -e
           OPERATION="${{ github.event.inputs.operation || 'migrate' }}"
           case "$OPERATION" in
             migrate)
-              echo "Running database migration..."
-              liquibase $CLASS_PATH_OPT update
+              echo "Running database migration...";
+              liquibase update;
               ;;
             rollback)
-              COUNT="${{ github.event.inputs.rollback_count || '1' }}"
-              echo "Rolling back $COUNT changeset(s)..."
-              liquibase $CLASS_PATH_OPT rollbackCount $COUNT
+              COUNT="${{ github.event.inputs.rollback_count || '1' }}";
+              echo "Rolling back $COUNT changeset(s)...";
+              liquibase rollbackCount $COUNT;
               ;;
             status)
-              echo "Checking migration status..."
-              liquibase $CLASS_PATH_OPT status --verbose
+              echo "Checking migration status...";
+              liquibase status --verbose;
               ;;
             history)
-              echo "Showing migration history..."
-              liquibase $CLASS_PATH_OPT history
+              echo "Showing migration history...";
+              liquibase history;
               ;;
             clear)
-              echo "Clearing checksums..."
-              liquibase $CLASS_PATH_OPT clearCheckSums
+              echo "Clearing checksums...";
+              liquibase clearCheckSums;
               ;;
             *)
-              echo "Unknown operation: $OPERATION"
-              exit 1
+              echo "Unknown operation: $OPERATION";
+              exit 1;
               ;;
           esac
 
@@ -119,7 +121,7 @@ jobs:
         if: always()
         run: |
           echo "Final database status:"
-          liquibase --classpath=drivers/mysql-connector-j-9.4.0.jar status
+          liquibase status
 
   # Job for PR validation (dry-run)
   liquibase-validate:
@@ -133,15 +135,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
       - name: Setup Liquibase
-        uses: liquibase/setup-liquibase@v2
+        uses: liquibase/setup-liquibase@v2.0.0
         with:
           version: ${{ env.LIQUIBASE_VERSION }}
-          edition: oss
-      - name: Download MySQL JDBC Driver
+          edition: 'oss'
+      - name: Install MySQL Driver (LPM)
         run: |
-          mkdir -p drivers
-          wget -O drivers/mysql-connector-j-9.4.0.jar https://repo1.maven.org/maven2/com/mysql/mysql-connector-j/9.4.0/mysql-connector-j-9.4.0.jar
-          ls -l drivers
+          set -euo pipefail
+          liquibase lpm add mysql --global
+          liquibase lpm list || true
       - name: Create secure liquibase.properties
         run: |
           cat > liquibase.properties << EOF
@@ -153,14 +155,12 @@ jobs:
           logLevel=info
           EOF
       - name: Validate changelog syntax
-        run: |
-          liquibase --classpath=drivers/mysql-connector-j-9.4.0.jar validate
+        run: liquibase validate
       - name: Check pending changes
-        run: |
-          liquibase --classpath=drivers/mysql-connector-j-9.4.0.jar status --verbose
+        run: liquibase status --verbose
       - name: Generate update SQL (dry-run)
         run: |
-          liquibase --classpath=drivers/mysql-connector-j-9.4.0.jar updateSQL > migration-preview.sql
+          liquibase updateSQL > migration-preview.sql
           echo "SQL Preview:" && cat migration-preview.sql
       - name: Upload SQL Preview
         uses: actions/upload-artifact@v4
@@ -179,15 +179,14 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
       - name: Setup Liquibase
-        uses: liquibase/setup-liquibase@v2
+        uses: liquibase/setup-liquibase@v2.0.0
         with:
           version: ${{ env.LIQUIBASE_VERSION }}
-          edition: oss
-      - name: Download MySQL JDBC Driver
+          edition: 'oss'
+      - name: Install MySQL Driver (LPM)
         run: |
-          mkdir -p drivers
-          wget -O drivers/mysql-connector-j-9.4.0.jar https://repo1.maven.org/maven2/com/mysql/mysql-connector-j/9.4.0/mysql-connector-j-9.4.0.jar
-          ls -l drivers
+          set -euo pipefail
+          liquibase lpm add mysql --global
       - name: Create secure liquibase.properties
         run: |
           cat > liquibase.properties << EOF
@@ -201,7 +200,7 @@ jobs:
       - name: Database connectivity test
         run: |
           echo "Testing database connectivity..."
-          timeout 30s liquibase --classpath=drivers/mysql-connector-j-9.4.0.jar status || {
+          timeout 30s liquibase status || {
             echo "Database connection failed or timed out"
             exit 1
           }
@@ -209,3 +208,4 @@ jobs:
         run: |
           echo "Checking for database locks..."
           mysql -h ${{ secrets.DB_HOST }} -P ${{ secrets.DB_PORT || '3306' }} -u ${{ secrets.DB_USERNAME }} -p${{ secrets.DB_PASSWORD }} ${{ secrets.DB_NAME }} -e "SELECT * FROM DATABASECHANGELOGLOCK;" || echo "No lock table found or accessible"
+
