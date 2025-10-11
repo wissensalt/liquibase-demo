@@ -53,20 +53,14 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Liquibase
-        uses: liquibase/setup-liquibase@v2.0.0
-        with:
-          version: ${{ env.LIQUIBASE_VERSION }}
-          edition: 'oss'
-
-      - name: Install MySQL Driver (LPM)
-        run: |
-          set -euo pipefail
-          liquibase --version
-          echo "Installing MySQL JDBC driver via Liquibase Package Manager..."
-          liquibase lpm add mysql --global
-          echo "Installed packages:" || true
-          liquibase lpm list || true
+#      - name: Install MySQL Driver (LPM)
+#        run: |
+#          set -euo pipefail
+#          liquibase --version
+#          echo "Installing MySQL JDBC driver via Liquibase Package Manager..."
+#          liquibase lpm add mysql --global
+#          echo "Installed packages:" || true
+#          liquibase lpm list || true
 
       - name: Create secure liquibase.properties
         run: |
@@ -82,6 +76,13 @@ jobs:
           EOF
           echo 'Generated liquibase.properties:'
           cat liquibase.properties
+
+
+      - name: Setup Liquibase
+        uses: liquibase/setup-liquibase@v2.0.0
+        with:
+          version: ${{ env.LIQUIBASE_VERSION }}
+          edition: 'oss'
 
       - name: Validate connection
         run: |
@@ -150,6 +151,7 @@ jobs:
           password=${{ secrets.DB_PASSWORD }}
           driver=com.mysql.cj.jdbc.Driver
           changeLogFile=changelogs/changelog-root.yaml
+          classpath=drivers/mysql-connector-j-9.4.0.jar
           logLevel=info
           EOF
       - name: Setup Liquibase
@@ -181,15 +183,10 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      - name: Setup Liquibase
-        uses: liquibase/setup-liquibase@v2.0.0
-        with:
-          version: ${{ env.LIQUIBASE_VERSION }}
-          edition: 'oss'
-      - name: Install MySQL Driver (LPM)
-        run: |
-          set -euo pipefail
-          liquibase lpm add mysql --global
+#      - name: Install MySQL Driver (LPM)
+#        run: |
+#          set -euo pipefail
+#          liquibase lpm add mysql --global
       - name: Create secure liquibase.properties
         run: |
           cat > liquibase.properties << EOF
@@ -198,8 +195,14 @@ jobs:
           password=${{ secrets.DB_PASSWORD }}
           driver=com.mysql.cj.jdbc.Driver
           changeLogFile=changelogs/changelog-root.yaml
+          classpath=drivers/mysql-connector-j-9.4.0.jar
           logLevel=info
           EOF
+      - name: Setup Liquibase
+        uses: liquibase/setup-liquibase@v2.0.0
+        with:
+          version: ${{ env.LIQUIBASE_VERSION }}
+          edition: 'oss'
       - name: Database connectivity test
         run: |
           echo "Testing database connectivity..."
