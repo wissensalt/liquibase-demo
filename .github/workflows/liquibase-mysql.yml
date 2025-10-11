@@ -27,7 +27,7 @@ on:
         description: 'Number of changesets to rollback (only for rollback operation)'
         required: false
         default: '1'
-  
+
   # Automatic migration on push to main/master branch (defaults to staging)
   push:
     branches: [ main, master ]
@@ -35,7 +35,7 @@ on:
       - 'changelogs/**'
       - 'liquibase.properties'
       - 'drivers/**'
-  
+
   # Automatic migration on pull request (defaults to staging)
   pull_request:
     branches: [ main, master ]
