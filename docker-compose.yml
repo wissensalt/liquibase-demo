@@ -18,7 +18,7 @@ services:
     depends_on:
       - mysql
     volumes:
-      - ./changelogs:/liquibase/changelog
+      - ./changelogs:/liquibase/changelogs
       - ./liquibase.properties:/liquibase/liquibase.properties
       - ./drivers:/liquibase/classpath
     entrypoint: tail -f /dev/null   # keep container running
