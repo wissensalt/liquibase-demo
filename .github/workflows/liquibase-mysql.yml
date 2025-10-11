@@ -1,4 +1,4 @@
-name: Database Migration for MySQL with Liquibase
+name: MySQL DB Migration
 
 on:
   # Manual trigger with operation selection
