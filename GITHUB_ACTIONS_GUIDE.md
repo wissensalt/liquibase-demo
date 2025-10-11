@@ -29,7 +29,7 @@ For production safety, set up environment protection rules:
 
 ## 📋 Available Workflows
 
-### 1. Main Liquibase Workflow (`liquibase.yml`)
+### Main Liquibase Workflow (`liquibase.yml`)
 
 **Triggers:**
 
@@ -44,16 +44,6 @@ For production safety, set up environment protection rules:
 - ✅ Post-operation status checks
 - ✅ SQL preview for pull requests
 - ✅ Database health monitoring
-
-### 2. Individual Operations Workflow (`liquibase-operations.yml`)
-
-**Manual trigger only** - Provides dedicated jobs for each Taskfile operation:
-
-- 🔄 **migrate** - Run database migrations
-- ⏪ **rollback** - Rollback specified number of changesets
-- 📊 **status** - Check migration status
-- 📜 **history** - View migration history
-- 🧹 **clear** - Clear Liquibase checksums
 
 ## 🎯 Usage Examples
 
@@ -134,7 +124,6 @@ git push origin main
 .github/
 ├── workflows/
 │   ├── liquibase-mysql.yml              # Main workflow with auto-triggers
-│   └── liquibase-operations.yml   # Individual operation workflows
 └── SECURITY.md                    # Security configuration guide
 ```
 

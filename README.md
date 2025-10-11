@@ -4,7 +4,8 @@
 
 [![YAML Lint](https://github.com/wissensalt/liquibase-demo/actions/workflows/yamllint.yaml/badge.svg?branch=master)](https://github.com/wissensalt/liquibase-demo/actions/workflows/yamllint.yaml)
 
-A comprehensive demonstration of database migration management using Liquibase with different database technologies and deployment scenarios.
+A comprehensive demonstration of database migration management using Liquibase with different
+database technologies and deployment scenarios.
 
 ## Requirements
 
@@ -13,18 +14,25 @@ A comprehensive demonstration of database migration management using Liquibase w
 3. Standalone as migration tool, no need to integrate with any programming language
 4. Allow Rollbacks to undo a database change
 5. Tracking schema change & version control
+6. Support multiple environments (development, staging, production)
+7. Containerized with Docker for easy setup and teardown
+8. Automated tasks for common operations
+9. CI/CD integration for automated deployments
 
 ## 🎯 Overview
 
-This project showcases various Liquibase implementations across different branches, demonstrating database migration best practices with Docker containerization, automated task management, and **GitHub Actions CI/CD pipelines**.
+This project showcases various Liquibase implementations across different branches, demonstrating
+database migration best practices with Docker containerization, automated task management, and *
+*GitHub Actions CI/CD pipelines**.
 
 ## 🔥 New: GitHub Actions Integration
 
-This repository now includes comprehensive GitHub Actions workflows for secure database migrations on your VPS! 
+This repository now includes comprehensive GitHub Actions workflows for secure database migrations
+on your VPS!
 
 - 🚀 **Automated migrations** on push to main branch
 - 🔒 **Secure credential management** with GitHub Secrets
-- 🎯 **Manual operation triggers** for all Taskfile commands
+- 🎯 **Manual operation triggers** for all `Taskfile` commands
 - 📊 **Environment-specific deployments** (dev/staging/prod)
 - ✅ **PR validation** with SQL preview generation
 
@@ -92,17 +100,17 @@ liquibase-demo/
 
 ### Local Development (Docker)
 
-| Task | Description |
-|------|-------------|
-| `task start-server` | Start MySQL server + Liquibase CLI using Docker |
-| `task stop-server` | Stop Docker containers |
-| `task migrate` | Run database migrations |
-| `task rollback` | Rollback last migration |
-| `task status` | Check migration status |
-| `task history` | Show migration history |
-| `task sync-db` | Sync database with changelog without running migrations |
-| `task generate-change-log` | Generate changelog from existing database |
-| `task clear` | Clear migration checksums |
+| Task                       | Description                                             |
+|----------------------------|---------------------------------------------------------|
+| `task start-server`        | Start MySQL server + Liquibase CLI using Docker         |
+| `task stop-server`         | Stop Docker containers                                  |
+| `task migrate`             | Run database migrations                                 |
+| `task rollback`            | Rollback last migration                                 |
+| `task status`              | Check migration status                                  |
+| `task history`             | Show migration history                                  |
+| `task sync-db`             | Sync database with changelog without running migrations |
+| `task generate-change-log` | Generate changelog from existing database               |
+| `task clear`               | Clear migration checksums                               |
 
 ### Production/VPS (GitHub Actions)
 
@@ -118,26 +126,31 @@ All tasks above are available via GitHub Actions workflows for secure VPS databa
 ## 🌿 Branch Overview
 
 ### `master` (Current)
+
 - **Database**: MySQL 8
 - **Features**: Basic user table management with structured changesets
 - **Changesets**: Table creation, data insertion, schema modifications, indexing
 
 ### `existing-db`
+
 - **Database**: MySQL 8 with pre-existing tables
 - **Features**: Database initialization script + Liquibase sync
 - **Use Case**: Working with existing database schemas
 
 ### `mongodb`
+
 - **Database**: MongoDB 7.0.6
 - **Features**: NoSQL migration using raw MongoDB commands
 - **Changesets**: Collection creation, document insertion, index management
 
 ### `multi-database`
+
 - **Database**: Multiple MySQL databases
 - **Features**: Cross-database migration management
 - **Use Case**: Multi-tenant or microservices architecture
 
 ### `yaml-sql`
+
 - **Database**: MySQL with YAML-formatted SQL changesets
 - **Features**: Mixed SQL/YAML configuration approach
 
@@ -168,26 +181,29 @@ MYSQL_ROOT_PASSWORD=password
 ## 📊 Database Schema
 
 ### Users Table Structure
+
 ```sql
-CREATE TABLE users (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    username VARCHAR(50) NOT NULL UNIQUE,
-    email VARCHAR(100) NOT NULL,
+CREATE TABLE users
+(
+    id         INT AUTO_INCREMENT PRIMARY KEY,
+    username   VARCHAR(50)  NOT NULL UNIQUE,
+    email      VARCHAR(100) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 ```
 
 ### Sample Data
+
 - **alice**: alice@example.com
 - **bob**: bob@example.com
 
 ## 🐳 Docker Services
 
-| Service | Image | Purpose | Port |
-|---------|-------|---------|------|
-| `mysql` | mysql:8 | Database server | 3306 |
-| `liquibase` | liquibase/liquibase:4.33-alpine | Migration tool | - |
-| `db-init` | mysql:8 | Database initialization | - |
+| Service     | Image                           | Purpose                 | Port |
+|-------------|---------------------------------|-------------------------|------|
+| `mysql`     | mysql:8                         | Database server         | 3306 |
+| `liquibase` | liquibase/liquibase:4.33-alpine | Migration tool          | -    |
+| `db-init`   | mysql:8                         | Database initialization | -    |
 
 ## 🔄 Migration Workflow
 
@@ -207,6 +223,7 @@ CREATE TABLE users (
 4. **Test locally**: Verify with `task migrate` and `task rollback`
 
 ### Changeset Structure
+
 ```yaml
 databaseChangeLog:
   - changeSet:
