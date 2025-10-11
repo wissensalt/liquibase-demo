@@ -1,4 +1,4 @@
-name: Database Migration with Liquibase
+name: Database Migration for MySQL with Liquibase
 
 on:
   # Manual trigger with operation selection
@@ -82,7 +82,7 @@ jobs:
   # Job for database migration operations
   liquibase-operation:
     runs-on: ubuntu-latest
-    name: Liquibase ${{ github.event.inputs.operation || 'migrate' }}
+    name: Liquibase ${{ github.event.inputs.operation || 'status' }}
     needs: database-health-check
 
     # Only run on manual trigger or push to main/master
@@ -157,6 +157,7 @@ jobs:
   liquibase-validate:
     runs-on: ubuntu-latest
     name: Validate Liquibase Changes
+    needs: database-health-check
     
     # Only run on pull requests
     if: github.event_name == 'pull_request'
