@@ -49,11 +49,15 @@ jobs:
 
     # Run on all triggers
     steps:
-      - name: Checkout code
+      # Reusable steps (anchored) ---------------------------
+      - &checkout_step
+        name: Checkout code
         uses: actions/checkout@v4
-      - name: Create secure liquibase.properties
+      - &create_props_step
+        name: Create secure liquibase.properties
         run: |
           cat > liquibase.properties << EOF
+          # Connection settings
           url=jdbc:mysql://${{ secrets.DB_HOST }}:${{ secrets.DB_PORT || '3306' }}/${{ secrets.DB_NAME }}
           username=${{ secrets.DB_USERNAME }}
           password=${{ secrets.DB_PASSWORD }}
@@ -62,11 +66,16 @@ jobs:
           classpath=drivers/mysql-connector-j-9.4.0.jar
           logLevel=info
           EOF
-      - name: Setup Liquibase
+          echo 'Generated liquibase.properties:'
+          cat liquibase.properties
+      - &setup_liquibase_step
+        name: Setup Liquibase
         uses: liquibase/setup-liquibase@v2.0.0
         with:
           version: ${{ env.VERSION }}
           edition: ${{ env.EDITION }}
+      # End reusable steps ----------------------------------
+
       - name: Database connectivity test
         run: |
           echo "Testing database connectivity..."
@@ -89,30 +98,12 @@ jobs:
     if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && contains(fromJson('["main", "master"]'), github.ref_name))
     
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      - name: Create secure liquibase.properties
-        run: |
-          cat > liquibase.properties << EOF
-          # Connection settings
-          url=jdbc:mysql://${{ secrets.DB_HOST }}:${{ secrets.DB_PORT || '3306' }}/${{ secrets.DB_NAME }}
-          username=${{ secrets.DB_USERNAME }}
-          password=${{ secrets.DB_PASSWORD }}
-          driver=com.mysql.cj.jdbc.Driver
-          changeLogFile=changelogs/changelog-root.yaml
-          classpath=drivers/mysql-connector-j-9.4.0.jar
-          logLevel=info
-          EOF
-          echo 'Generated liquibase.properties:'
-          cat liquibase.properties
-      - name: Setup Liquibase
-        uses: liquibase/setup-liquibase@v2.0.0
-        with:
-          version: ${{ env.VERSION }}
-          edition: ${{ env.EDITION }}
+      - *checkout_step
+      - *create_props_step
+      - *setup_liquibase_step
       - name: Validate connection
         run: |
-          echo "Testing database connection with LPM-provided driver..."
+          echo "Testing database connection..."
           liquibase status --verbose
 
       - name: Execute Liquibase Operation
@@ -163,24 +154,9 @@ jobs:
     if: github.event_name == 'pull_request'
     
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      - name: Create secure liquibase.properties
-        run: |
-          cat > liquibase.properties << EOF
-          url=jdbc:mysql://${{ secrets.DB_HOST }}:${{ secrets.DB_PORT || '3306' }}/${{ secrets.DB_NAME }}
-          username=${{ secrets.DB_USERNAME }}
-          password=${{ secrets.DB_PASSWORD }}
-          driver=com.mysql.cj.jdbc.Driver
-          changeLogFile=changelogs/changelog-root.yaml
-          classpath=drivers/mysql-connector-j-9.4.0.jar
-          logLevel=info
-          EOF
-      - name: Setup Liquibase
-        uses: liquibase/setup-liquibase@v2.0.0
-        with:
-          version: ${{ env.VERSION }}
-          edition: ${{ env.EDITION }}
+      - *checkout_step
+      - *create_props_step
+      - *setup_liquibase_step
       - name: Validate changelog syntax
         run: liquibase validate
       - name: Check pending changes
