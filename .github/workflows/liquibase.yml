@@ -55,7 +55,7 @@ jobs:
         uses: liquibase/setup-liquibase@v2
         with:
           version: ${{ env.LIQUIBASE_VERSION }}
-          edition: community
+          edition: oss
           # edition: pro   # Uncomment if using Liquibase Pro and set LICENSE_KEY secret
 
       - name: Download MySQL JDBC Driver
@@ -136,7 +136,7 @@ jobs:
         uses: liquibase/setup-liquibase@v2
         with:
           version: ${{ env.LIQUIBASE_VERSION }}
-          edition: community
+          edition: oss
 
       - name: Download MySQL JDBC Driver
         run: |
@@ -198,7 +198,7 @@ jobs:
         uses: liquibase/setup-liquibase@v2
         with:
           version: ${{ env.LIQUIBASE_VERSION }}
-          edition: community
+          edition: oss
 
       - name: Download MySQL JDBC Driver
         run: |
