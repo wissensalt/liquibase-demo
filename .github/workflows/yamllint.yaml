@@ -1,0 +1,63 @@
+on: [ pull_request ]
+
+jobs:
+  build:
+    name: YAML Lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install yamllint
+        run: pip install --disable-pip-version-check --no-cache-dir yamllint
+
+      - name: List YAML files (excluding patterns in .yamlignore)
+        id: list_yaml
+        shell: bash
+        run: |
+          if [ ! -f .yamlignore ]; then
+            echo ".yamlignore not found (proceeding without excludes)"
+            ignore_file=/dev/null
+          else
+            # Normalize ignore file: remove blank lines and comments
+            grep -vE '^[[:space:]]*(#|$)' .yamlignore > .yamlignore.cleaned || true
+            ignore_file=.yamlignore.cleaned
+          fi
+
+          # Collect YAML files tracked by git
+          files=$(git ls-files '*.yml' '*.yaml' || true)
+
+          # Exclude ignored paths (exact matches)
+          if [ -s "$ignore_file" ]; then
+            files=$(echo "$files" | grep -vxF -f "$ignore_file" || true)
+          fi
+
+          if [ -z "$files" ]; then
+            echo "No YAML files to lint after applying ignore list."
+            echo "files=" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "YAML files to lint:"
+          echo "$files"
+          # Set multiline output
+          {
+            echo 'files<<EOF'
+            echo "$files"
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Run yamllint
+        if: steps.list_yaml.outputs.files != ''
+        shell: bash
+        run: |
+          # Convert multiline output to space-separated list
+          files=$(echo "${{ steps.list_yaml.outputs.files }}" | tr '\n' ' ')
+          echo "Running yamllint on: $files"
+          yamllint -c .yamllint.yml $files

@@ -19,7 +19,7 @@ on:
         description: 'Number of changesets to rollback (only for rollback operation)'
         required: false
         default: '1'
-  
+
   # Automatic migration on push to main/master branch
   push:
     branches: [ main, master ]
@@ -27,7 +27,7 @@ on:
       - 'changelogs/**'
       - 'liquibase.properties'
       - 'drivers/**'
-  
+
   # Automatic migration on pull request
   pull_request:
     branches: [ main, master ]
@@ -96,7 +96,7 @@ jobs:
 
     # Only run on manual trigger or push to main/master
     if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && contains(fromJson('["main", "master"]'), github.ref_name))
-    
+
     steps:
       - *checkout_step
       - *create_props_step
@@ -149,10 +149,10 @@ jobs:
     runs-on: ubuntu-latest
     name: Validate Liquibase Changes
     needs: database-health-check
-    
+
     # Only run on pull requests
     if: github.event_name == 'pull_request'
-    
+
     steps:
       - *checkout_step
       - *create_props_step
